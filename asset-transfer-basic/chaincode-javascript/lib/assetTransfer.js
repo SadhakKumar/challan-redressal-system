@@ -7,8 +7,8 @@
 'use strict';
 
 // Deterministic JSON.stringify()
-const stringify  = require('json-stringify-deterministic');
-const sortKeysRecursive  = require('sort-keys-recursive');
+const stringify = require('json-stringify-deterministic');
+const sortKeysRecursive = require('sort-keys-recursive');
 const { Contract } = require('fabric-contract-api');
 
 class AssetTransfer extends Contract {
@@ -16,48 +16,54 @@ class AssetTransfer extends Contract {
     async InitLedger(ctx) {
         const assets = [
             {
-                ID: 'asset1',
-                Color: 'blue',
-                Size: 5,
-                Owner: 'Tomoko',
-                AppraisedValue: 300,
+                ChallanNo: "123456789120",
+                CarNo: "MH12AC2730",
+                ChallanAmount: 2000,
+                Reason: 'OverSpeed',
+                Owner: "sadhak",
+                Proof: "VideoLink"
             },
             {
-                ID: 'asset2',
-                Color: 'red',
-                Size: 5,
-                Owner: 'Brad',
-                AppraisedValue: 400,
+                ChallanNo: "123456789121",
+                CarNo: "MH12AC2731",
+                ChallanAmount: 2200,
+                Reason: "Illegal Parking",
+                Owner: "john",
+                Proof: "ImageLink"
             },
             {
-                ID: 'asset3',
-                Color: 'green',
-                Size: 10,
-                Owner: 'Jin Soo',
-                AppraisedValue: 500,
+                ChallanNo: "123456789122",
+                CarNo: "MH12AC2732",
+                ChallanAmount: 1800,
+                Reason: "No Seat Belt",
+                Owner: "jane",
+                Proof: "DocumentLink"
             },
             {
-                ID: 'asset4',
-                Color: 'yellow',
-                Size: 10,
-                Owner: 'Max',
-                AppraisedValue: 600,
+                ChallanNo: "123456789123",
+                CarNo: "MH12AC2733",
+                ChallanAmount: 2500,
+                Reason: 'OverSpeed',
+                Owner: "michael",
+                Proof: "VideoLink"
             },
             {
-                ID: 'asset5',
-                Color: 'black',
-                Size: 15,
-                Owner: 'Adriana',
-                AppraisedValue: 700,
+                ChallanNo: "123456789124",
+                CarNo: "MH12AC2734",
+                ChallanAmount: 2100,
+                Reason: 'OverSpeed',
+                Owner: "alice",
+                Proof: "ImageLink"
             },
             {
-                ID: 'asset6',
-                Color: 'white',
-                Size: 15,
-                Owner: 'Michel',
-                AppraisedValue: 800,
-            },
-        ];
+                ChallanNo: "123456789125",
+                CarNo: "MH12AC2735",
+                ChallanAmount: 1900,
+                Reason: 'OverSpeed',
+                Owner: "bob",
+                Proof: "DocumentLink"
+            }
+        ]
 
         for (const asset of assets) {
             asset.docType = 'asset';
@@ -65,80 +71,82 @@ class AssetTransfer extends Contract {
             // use convetion of alphabetic order
             // we insert data in alphabetic order using 'json-stringify-deterministic' and 'sort-keys-recursive'
             // when retrieving data, in any lang, the order of data will be the same and consequently also the corresonding hash
-            await ctx.stub.putState(asset.ID, Buffer.from(stringify(sortKeysRecursive(asset))));
+            await ctx.stub.putState(asset.ChallanNo, Buffer.from(stringify(sortKeysRecursive(asset))));
         }
     }
 
     // CreateAsset issues a new asset to the world state with given details.
-    async CreateAsset(ctx, id, color, size, owner, appraisedValue) {
-        const exists = await this.AssetExists(ctx, id);
+    async CreateAsset(ctx, challanNo, carNo, challanAmount, reason, owner, proof) {
+        const exists = await this.AssetExists(ctx, challanNo);
         if (exists) {
-            throw new Error(`The asset ${id} already exists`);
+            throw new Error(`The asset ${challanNo} already exists`);
         }
 
         const asset = {
-            ID: id,
-            Color: color,
-            Size: size,
+            ChallanNo: challanNo,
+            CarNo: carNo,
+            ChallanAmount: challanAmount,
+            Reason: reason,
             Owner: owner,
-            AppraisedValue: appraisedValue,
+            Proof: proof
         };
         // we insert data in alphabetic order using 'json-stringify-deterministic' and 'sort-keys-recursive'
-        await ctx.stub.putState(id, Buffer.from(stringify(sortKeysRecursive(asset))));
+        await ctx.stub.putState(challanNo, Buffer.from(stringify(sortKeysRecursive(asset))));
         return JSON.stringify(asset);
     }
 
     // ReadAsset returns the asset stored in the world state with given id.
-    async ReadAsset(ctx, id) {
-        const assetJSON = await ctx.stub.getState(id); // get the asset from chaincode state
+    async ReadAsset(ctx, challanNo) {
+        const assetJSON = await ctx.stub.getState(challanNo); // get the asset from chaincode state
         if (!assetJSON || assetJSON.length === 0) {
-            throw new Error(`The asset ${id} does not exist`);
+            throw new Error(`The asset ${challanNo} does not exist`);
         }
         return assetJSON.toString();
     }
 
     // UpdateAsset updates an existing asset in the world state with provided parameters.
-    async UpdateAsset(ctx, id, color, size, owner, appraisedValue) {
-        const exists = await this.AssetExists(ctx, id);
+    async UpdateAsset(ctx, challanNo, carNo, challanAmount, reason, owner, proof) {
+        const exists = await this.AssetExists(ctx, challanNo);
         if (!exists) {
-            throw new Error(`The asset ${id} does not exist`);
+            throw new Error(`The asset ${challanNo} does not exist`);
         }
 
         // overwriting original asset with new asset
         const updatedAsset = {
-            ID: id,
-            Color: color,
-            Size: size,
+            ChallanNo: challanNo,
+            CarNo: carNo,
+            ChallanAmount: challanAmount,
+            Reason: reason,
             Owner: owner,
-            AppraisedValue: appraisedValue,
+            Proof: proof
         };
         // we insert data in alphabetic order using 'json-stringify-deterministic' and 'sort-keys-recursive'
-        return ctx.stub.putState(id, Buffer.from(stringify(sortKeysRecursive(updatedAsset))));
+        return ctx.stub.putState(challanNo, Buffer.from(stringify(sortKeysRecursive(updatedAsset))));
     }
 
     // DeleteAsset deletes an given asset from the world state.
-    async DeleteAsset(ctx, id) {
-        const exists = await this.AssetExists(ctx, id);
+    async DeleteAsset(ctx, challanNo) {
+        const exists = await this.AssetExists(ctx, challanNo);
         if (!exists) {
-            throw new Error(`The asset ${id} does not exist`);
+            throw new Error(`The asset ${challanNo} does not exist`);
         }
-        return ctx.stub.deleteState(id);
+        return ctx.stub.deleteState(challanNo);
     }
 
     // AssetExists returns true when asset with given ID exists in world state.
-    async AssetExists(ctx, id) {
-        const assetJSON = await ctx.stub.getState(id);
+    async AssetExists(ctx, challanNo) {
+        const assetJSON = await ctx.stub.getState(challanNo);
         return assetJSON && assetJSON.length > 0;
     }
 
     // TransferAsset updates the owner field of asset with given id in the world state.
-    async TransferAsset(ctx, id, newOwner) {
-        const assetString = await this.ReadAsset(ctx, id);
+    async TransferAsset(ctx, challanNo, newOwner) {
+        const assetString = await this.ReadAsset(ctx, challanNo);
         const asset = JSON.parse(assetString);
         const oldOwner = asset.Owner;
         asset.Owner = newOwner;
         // we insert data in alphabetic order using 'json-stringify-deterministic' and 'sort-keys-recursive'
-        await ctx.stub.putState(id, Buffer.from(stringify(sortKeysRecursive(asset))));
+        await ctx.stub.putState(challanNo, Buffer.from(stringify(sortKeysRecursive(asset))));
         return oldOwner;
     }
 
